@@ -31,17 +31,10 @@ jobs:
         with:
           args: --pdf-engine=xelatex -o doc.pdf README.md
 
-      - name: Generate german pdf doc
-        uses: docker://pandoc/latex
-        with:
-          args: --pdf-engine=xelatex -o doc_de.pdf README_DE.md
-
       - name: Provide doc for OPM
         run: |
-          mkdir -p doc/de
           mkdir -p doc/en
           cp -a doc.pdf doc/en/${{ env.NAME }}.pdf
-          cp -a doc_de.pdf doc/de/${{ env.NAME }}.pdf
         shell: bash
 
       - name: Build OPM package
