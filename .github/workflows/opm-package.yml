@@ -5,10 +5,10 @@ on:
     types: [ published ]
 
   push:
-    branches: [ main ]
 
   # allows for manual workflow execution
   workflow_dispatch:
+
 
 jobs:
   # this job prepares php sources for packaging
