@@ -1,0 +1,99 @@
+name: Build OPM
+
+on:
+  release:
+    types: [ published ]
+
+  push:
+    branches: [ main ]
+
+  # allows for manual workflow execution
+  workflow_dispatch:
+
+
+jobs:
+  build-opm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Calculate package version
+        run: |
+          echo "VERSION=$(git describe --tag --abbrev=7 | sed s/-/./g)" >> $GITHUB_ENV
+          echo "NAME=TicketDynamicFieldsWidget" >> $GITHUB_ENV
+
+      - name: Generate english pdf doc
+        uses: docker://pandoc/latex
+        with:
+          args: --pdf-engine=xelatex -o doc.pdf README.md
+
+      - name: Generate german pdf doc
+        uses: docker://pandoc/latex
+        with:
+          args: --pdf-engine=xelatex -o doc_de.pdf README_DE.md
+
+      - name: Provide doc for OPM
+        run: |
+          mkdir -p doc/de
+          mkdir -p doc/en
+          cp -a doc.pdf doc/en/${{ env.NAME }}.pdf
+          cp -a doc_de.pdf doc/de/${{ env.NAME }}.pdf
+        shell: bash
+
+      - name: Build OPM package
+        uses: freiconoss/action-opm-build@v1.1
+        with:
+          name: ${{ env.NAME }}
+          version: ${{ env.VERSION }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ env.NAME }}-${{ env.VERSION }}.opm
+          retention-days: 5
+  
+      - name: Get release
+        if: always() && github.event_name == 'release'
+        id: get_release
+        uses: bruceadams/get-release@v1.2.3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+  
+      - name: Upload release artifact
+        if: always() &&  github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ${{ env.NAME }}-${{ env.VERSION }}.opm
+          asset_name: ${{ env.NAME }}-${{ env.VERSION }}.opm
+          asset_content_type: application/octet-stream
+
+      - name: Upload english docs
+        if: always() &&  github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: doc.pdf
+          asset_name: ${{ env.NAME }}_EN.pdf
+          asset_content_type: application/octet-stream
+ 
+      - name: Upload german docs
+        if: always() &&  github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: doc_de.pdf
+          asset_name: ${{ env.NAME }}_DE.pdf
+          asset_content_type: application/octet-stream
+

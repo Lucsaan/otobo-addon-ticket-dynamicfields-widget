@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<otobo_config version="2.0" init="Application">
+    <Setting Name="Frontend::Module###TicketDynamicFieldsWidgetAJAX" Required="0" Valid="1">
+        <Description Translatable="1">Frontend module registration for the agent interface.</Description>
+        <Navigation>Addons::TicketDynamicFieldsWidget</Navigation>
+        <Value>
+            <Item ValueType="FrontendRegistration">
+                <Hash>
+                    <Item Key="Description" Translatable="1">TicketDynamicFieldsWidget AJAX</Item>
+                    <Item Key="Title" Translatable="1">TicketDynamicFieldsWidget AJAX</Item>
+                    <Item Key="NavBarName">TicketDynamicFieldsWidget AJAX</Item>
+                </Hash>
+            </Item>
+        </Value>
+    </Setting>
+
+    <Setting Name="Loader::Module::AgentTicketZoom###001-DynamicFieldsWidget" Required="0" Valid="1">
+        <Description Translatable="1">Loader module registration for the agent interface.</Description>
+        <Navigation>Addons::TicketDynamicFieldsWidget::Loader</Navigation>
+        <Value>
+            <Hash>
+                <Item Key="JavaScript">
+                    <Array>
+                        <Item>TicketDynamicFieldsWidget/DynamicFieldsWidget.js</Item>
+                    </Array>
+                </Item>
+            </Hash>
+        </Value>
+    </Setting>
+</otobo_config>
