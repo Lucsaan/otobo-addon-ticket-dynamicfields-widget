@@ -1,0 +1,48 @@
+name: Build OPM
+
+on:
+  release:
+    types: [ published ]
+
+  push:
+    branches: [ main ]
+
+  # allows for manual workflow execution
+  workflow_dispatch:
+
+jobs:
+  # this job prepares php sources for packaging
+  build-opm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Calculate package version
+        run: |
+          echo "NAME=TicketDynamicFieldsWidget" >> $GITHUB_ENV
+          echo "VERSION=$(git describe --tag --abbrev=7 | sed s/-/./g)" >> $GITHUB_ENV
+
+      - name: Fetch opm action
+        uses: actions/checkout@v2
+        with:
+          repository: Freicon/action-opm-build
+          ref: master
+          token: ${{ secrets.PAT_TO_CLONE }}
+          path: .github/actions/action-opm-build
+
+      - name: Build OPM package
+        uses: ./.github/actions/action-opm-build
+        with:
+          name: ${{ env.NAME }}
+          version: ${{ env.VERSION }}
+
+
+      - name: Upload OPM package
+        run: |
+          curl --connect-timeout 10 --retry 5 -f -X POST ${{ secrets.PACKAGE_UPLOAD_URL }} -H "Authorization: Token ${{ secrets.PACKAGE_UPLOAD_TOKEN }}" -H "Upload-Type: otoboAddon" -H "Upload-Name: ${NAME}" -H "Upload-Version: ${GITHUB_REF_NAME}" -F "package=@${NAME}-${VERSION}.opm"
+
+
